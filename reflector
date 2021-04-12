@@ -10,6 +10,3 @@ sudo pacman -Syy
 
 #atualizar os pacotes e sistema
 sudo pacman -Syu
-
-
-Teste 4
