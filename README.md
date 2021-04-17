@@ -1,6 +1,4 @@
-# ..:: Reflector ::..
-# Mirrors para atualizar o Arch mais rápido
+# ..:: Arch linux ::..
+# Scrips
 
-Fazendo backup do mirrorlist
 
-sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist-bkp
