@@ -1,4 +1,4 @@
-# ..:: Arch linux ::..
-# Scrips
+# ..:: Shell Scrips ::..
+# Automoção via scrips
 
 
