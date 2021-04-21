@@ -26,52 +26,65 @@ pt_BR.UTF-8 UTF-8
 8- Descobri qual disco rígido foi detectado:
 # dmesg | grep sd
 
-9- Configurar as partições no disco ( No meu caso, usei um disco de 20GB)
-# cfdisk /dev/sda ‘sda’ (Primeiro disco rígido SATA) ou ‘sdb’ (Segundo disco rígido SATA)
+9- Para formatar o Tableta de partição
 
-    sda1 * 9G /
-    sda2 1G swap
-    sda3 10G /home
+# parted
+# mktparted
+# GPT
+# Yes
+# Qui
 
-10- Escrever/Write as mudanças nas partições.
+10- Para formatar a partição para UEFI
 
-Escrever/Write — Sim/Yes
-Quit/Sair
+# mkfs.fat -F32 -n EFI /dev/sdXX
 
-11- Para formatar as partições com um sistema de arquivos ext4:
-# mkfs.ext4 /dev/sda1
-# mkfs.ext4 /dev/sda3
+11- Para formatar as partições com um sistema de arquivos:
+
+Para SSD
+# mkfs.f2fs -l NOME /dev/sdXX
+
+Para HD
+# mkfs.xfs -L NOME /dev/sdXX
 
 12- E para formatar e ativar a partição de swap:
-# mkswap /dev/sda2
-# swapon /dev/sda2
+
+# mkswap -L Swap /dev/sdXX
+# swapon /dev/sdXX
 
 Para verificar se a partição swap está funcionando, utilize o comando free ou swapon
 # swapon -s
 # free -h
 
 13- Primeiro, monte a partição raíz em /mnt.
-# mount /dev/sda1 /mnt
+# mount /dev/sdXX /mnt
 
-14- Monte então a partição destinada ao /home e outras separadas para o /boot, /var, etc, caso desejar:
-# mkdir /mnt/home
-# mount /dev/sda3 /mnt/home
+14- Criar as partição destinada ao /home e outras separadas para o /boot, /var, etc, caso desejar:
 
-15- No caso da partição /boot ser separada:
-# mkdir /mnt/boot
-# mount /dev/sdaX /mnt/boot
+# mkdir /mnt/{efi,home}
+# mount /dev/sdXX /mnt/efi
+# mount /dev/sdXX /mnt/boot
 
-16- Para ver o layout de particionamento atual:
+15- Para ver o layout de particionamento atual:
 # lsblk /dev/sda
 
+16- Reflector para espelhos do Brasil
+Baixar o Reflector
+# pacman -S reflector rsync
+
+Espelhar os servidores
+# reflector --country Brazil --p http --p https --sort rate --save /etc/pacman.d/mirrorlist
+
+Atualizar o cache
+# pacman -Syy
+
 17- Instalar o sistema no diretório sda
-# pacstrap /mnt base base-devel linux linux-firmware sudo vim
+# pacstrap /mnt base base-devel linux vim
 
 18- Gerar arquivo fstab (FSTAB: File System Table)(Se preferir adicione a opção -U (UUIDs) ou -L (labels))
 # genfstab -U -p /mnt/ >> /mnt/etc/fstab
 
 19- Caso você queira editar o arquivo fstab.
-# nano /mnt/etc/fstab
+# vim /mnt/etc/fstab
 
 20- Criar ambiente chroot ( Agora podemos fazer todos os procedimentos estando no diretório “/”, não precisando indicar o /mnt.) (CHROOT: Change Root)
 # arch-chroot /mnt /bin/bash
@@ -120,7 +133,7 @@ Descomentar essas linhas.
 # pacman -Sy
 
 30- Dar um nome para a máquina.
-# echo T-800 > /etc/hostname
+# echo NOME > /etc/hostname
 
 31- Adicionando entrada correspondente
 # vim /etc/hosts
@@ -133,34 +146,29 @@ Descomentar essas linhas.
 # pacman -S sudo
 
 33- Baixar e instalar o GRUB no computador.
-(BIOS)
 # pacman -S grub efibootmgr
-# grub-install — target=i386-pc — recheck /dev/sda
-# cp /usr/share/locale/en\@quot/LC_MESSAGES/grub.mo /boot/grub/locale/en.mo
-
-Dica: Para a busca automática de outros sistemas operacionais em seu computador, instale o pacote os-prober (pacman -S os-prober) antes de rodar o próximo comando.
+# grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=GRUB
 
 34- Crie um ambiente ramdisk inicial.
 # mkinitcpio -p linux
 
->>>>>35- Install Microcode
-Para processadores Intel com carregador de inicialização grub:
-# pacman -S intel-ucode
-Para os processadores AMD instalar o pacote linux-firmware
+35- Install Microcode
+Para Intel  # pacman -S intel-ucode
+Para AMD    # pacman -S linux-firmware
 
 36- Gerar arquivo de configuração do GRUB.
 # grub-mkconfig -o /boot/grub/grub.cfg
 
 37- Criar usuario e definir senha
-# useradd -m -g users -G wheel,storage,power -s /bin/bash joao
-# passwd joao
+# useradd -m -g users -G wheel,storage,power,video,render NOME
+# passwd NOME
 
 38- Definir a senha de root
 # passwd root
 
 39- Edite o arquivo sudoers:
 
-# nano /etc/sudoers
+# vim /etc/sudoers
 
 Descomente a opção
 ## Uncomment to allow members of group wheel to execute any command
@@ -180,18 +188,14 @@ check device name
 41- Se você estiver instalando Arch Linux em um laptop, então você também precisa de apoio para trackpad, então instalar o pacote “synaptics”:
 # pacman -S xf86-input-synaptics
 
--#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#
-
-
-Após a instalação do Arch Linux a única coisa que os usuários veem é uma linha de comando sem qualquer servidor X, então o usuário deve instalar o X server e uma área de trabalho e alguns outros aplicativos para fazer seu trabalhos diários.
-
-Interface de usuário básica para configuração de rede
+42- Interface de usuário básica para configuração de rede
 # nmtui
 
-1- Por ter GUI no seu sistema, que você precisa instalar o servidor X e eles podem ser instalados no sistema no comando a seguir (Xorg é o servidor de exibição mais popular entre os usuarios Linux.).
-$ sudo pacman -S xorg-server xorg-xinit xorg-apps gvfs-mtp sshfs
+43- Por ter GUI no seu sistema, que você precisa instalar o servidor X e eles podem ser instalados no sistema no comando a seguir (Xorg é o servidor de exibição mais popular entre os usuarios Linux.).
 
-2- Verificar a placa gráfica no Linux:
+# sudo pacman -S xorg-server xorg-xinit xorg-apps gvfs-mtp sshfs
+
+44- Verificar a placa gráfica no Linux:
 
 # lspci | grep VGA
 
@@ -202,13 +206,10 @@ Use a saída do comando acima para determinar qual driver você precisa. ( Insta
 # pacman -S xf86-video-nouveau — para placa de vídeo Nvidia)
 # pacman -S xf86-video-intel — para drivers da intel
 
-Eu usei este, use também para sua referencia.
-# pacman -S xf86-video-intel
-
-3- Próxima coisa que precisa e dos ultilitarios de som.
+45- Próxima coisa que precisa e dos ultilitarios de som.
 # sudo pacman -S pavucontrol alsa-firmware alsa-utils alsa-plugins pulseaudio-alsa pulseaudio
 
-4- Depois de instalar o servidor X você precisa de um ambiente de Desktop ou um Gerenciador de janelas para fazer seus trabalhos com isso!
+46- Depois de instalar o servidor X você precisa de um ambiente de Desktop ou um Gerenciador de janelas para fazer seus trabalhos com isso!
 
     Nota: Instalar pacotes de grupo Extra é opcional!
 
@@ -242,23 +243,23 @@ Eu usei este, use também para sua referencia.
     [Instalar LXQT Desktop Environment]
     $ sudo pacman -S lxqt
 
-5- No meu caso vou instalar o XFCE ❤
+47- No meu caso vou instalar o XFCE ❤
 # sudo pacman -S xfce4 xfce4-goodies
 
 Instalação Gerenciador de exibição LightDM no Arch-Linux
 
-6- Existem muitos do Gerenciador de exibição para usar como XDM, slim e etc… mas meu favorito é lightdm porque é rápido e personalizável.
+48- Existem muitos do Gerenciador de exibição para usar como XDM, slim e etc… mas meu favorito é lightdm porque é rápido e personalizável.
 
-7- Para instalar LightDM use o seguinte comand
+49- Para instalar LightDM use o seguinte comand
 # pacman -S lightdm lightdm-gtk-greeter
 
-8- Você pode instalar o pacote para ser capaz de personalizar seu LightDM por uma aplicação gráfica na sequência:
+50- Você pode instalar o pacote para ser capaz de personalizar seu LightDM por uma aplicação gráfica na sequência:
 # pacman -S lightdm-gtk-greeter-settings
 
-9- Agora ative o serviço:
+51- Agora ative o serviço:
 # systemctl enable lightdm
 
-10- Vamos Reiniciar
+52- Vamos Reiniciar
 # reboot
 
     [Instalar, Iniciar & Ativar lxdm Display Manager]
@@ -352,21 +353,3 @@ Habilitar e iniciar o serviço de bluetooth:
 
 Feito!
 
-6- AUR Repo:
-
-Alguns pacotes tais como Kazam, i3blocks e etc não podem ser encontrados no repositórios Main, para nós deve instalá-los de AUR e para fazer também precisamos adicionar endereço AUR no final do arquivo /etc/pacman.conf.
-
-Yaourt fornecer experiência muito suave de pesquisa interativa e instalar a partir do AUR.
-
-Primeiro, abra este arquivo com o editor nano:
-
-# sudo nano /etc/pacman.conf
-
-Agora adicione essas linhas na parte inferior do arquivo:
-
-    [archlinuxfr]
-    SigLevel = Never
-    Server = http://repo.archlinux.fr/$arch
-
-Agora salve as alterações (CTRL + O)+ ENTER, e atualize o seu sistema pelo seguinte código:
-# sudo pacman -Syu
