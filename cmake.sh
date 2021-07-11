@@ -1,4 +1,4 @@
-#cmake por D13KO7
+#cmake por DiEGo7SiLVa
 
 #criar e entrar a pasta de construção (build)
 mkdir -p build && cd build
