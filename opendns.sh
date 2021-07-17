@@ -1,5 +1,5 @@
-#Inserir o Open DNS no Resolv.conf
-sudo echo -e "nameserver 208.67.222.222 \nnameserver 208.67.220.220" > /etc/resolv.conf
+#Inserir o Cloudflare DNS no Resolv.conf
+sudo echo -e "nameserver 1.1.1.1 \nnameserver 1.0.0.1" > /etc/resolv.conf
 
 
 #Forçar ajuste no Resolv.conf
