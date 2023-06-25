@@ -1,0 +1,25 @@
+sudo zypper dup
+
+sudo zypper in --type pattern devel_basis devel_C_C++ devel_kernel
+
+sudo zypper inr
+
+sudo zypper ref
+
+sudo zypper in nvidia-gfxG06-kmp-default
+
+sudo zypper in vulkan-tools vulkan-headers vulkan-validationlayers
+
+
+
+
+sudo zypper install wine winetricks wine-mono
+
+export WINEARCH=win32
+
+export WINEPREFIX=~/.wine32
+
+
+winetricks
+winecfg
+
